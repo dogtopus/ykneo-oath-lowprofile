@@ -7,6 +7,9 @@ This project implement the HOTP/TOTP card functionality used on the
 YubiKey NEO device that is sold by Yubico.  Its primary use is to use
 the YubiKey NEO to generate OATH HOTP/TOTP one-time-passwords.
 
+This fork mainly aims at cuting down the absurd transient memory usage
+of the original ykneo-auth so it will hopefully work on more hardware
+other than Yubikey NEO.
 
 === License
 
