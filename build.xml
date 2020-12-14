@@ -9,6 +9,7 @@
   <property name="test.lib" location="test/lib"/>
   <!-- Load user specified extra properties -->
   <property file="${user.home}/javacard.properties"/>
+  <property name="JAVACARD_HOME" value="ext/oracle_javacard_sdks/jc222_kit"/>
   <property name="JAVA_PACKAGE" value="pkgYkneoOath"/>
   <property name="JAVA_PACKAGE_DIR" value="pkgYkneoOath"/>
   <property name="APPLET_NAME" value="YkneoOath"/>
