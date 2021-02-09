@@ -134,6 +134,22 @@ public class OathObj {
 		return (short) nameLen;
 	}
 
+    public short calculateSerializedResponseLength(boolean truncated) {
+        // magic + nameLength + name (var) + type + leftoverLength + digits + hash (4-32)
+        short hashSize;
+        if (truncated) {
+            hashSize = 4;
+        } else {
+            hashSize = this.digest.getLength();
+        }
+        return this.isActive() ? (short) (nameLen + 5 + hashSize) : _0;
+    }
+
+    public short calculateSerializedEntryLength() {
+        // tag + len + type + name
+        return this.isActive() ? (short) (nameLen + 3) : _0;
+    }
+
 	public void setProp(byte props) {
 		this.props = props;
 		if((props & PROP_ALWAYS_INCREASING) == PROP_ALWAYS_INCREASING) {
