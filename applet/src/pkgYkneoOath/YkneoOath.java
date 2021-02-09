@@ -277,7 +277,6 @@ public class YkneoOath extends Applet {
 		        if (remaining > 0) {
 		            ISOException.throwIt((short) (ISO7816.SW_BYTES_REMAINING_00 | remaining));
 		        }
-			//sendData(apdu, sendLen);
 		}
 	}
 
