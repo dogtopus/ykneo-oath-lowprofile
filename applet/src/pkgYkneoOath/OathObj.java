@@ -145,7 +145,7 @@ public class OathObj {
         return this.isActive() ? (short) (nameLen + 5 + hashSize) : _0;
     }
 
-    public short calculateSerializedEntryLength() {
+    public short calculateSerializedListEntryLength() {
         // tag + len + type + name
         return this.isActive() ? (short) (nameLen + 3) : _0;
     }
