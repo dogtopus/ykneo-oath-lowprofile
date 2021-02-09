@@ -1,8 +1,5 @@
 == YubiKey NEO App: OATH
 
-NOTE: This project is in maintenance mode, it's in use on the YubiKey NEO
-but not on newer Yubico products. No development is happening on this.
-
 This project implement the HOTP/TOTP card functionality used on the
 YubiKey NEO device that is sold by Yubico.  Its primary use is to use
 the YubiKey NEO to generate OATH HOTP/TOTP one-time-passwords.
@@ -10,6 +7,8 @@ the YubiKey NEO to generate OATH HOTP/TOTP one-time-passwords.
 This fork mainly aims at cuting down the absurd transient memory usage
 of the original ykneo-auth so it will hopefully work on more hardware
 other than Yubikey NEO.
+
+Tested working on FeiTian JavaCOS A22 and J3H145. Only TOTP works on ACOSJ Dual 95K for some reason.
 
 === License
 
