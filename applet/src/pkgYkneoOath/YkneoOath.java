@@ -26,7 +26,7 @@ import javacard.framework.Util;
 import javacard.security.RandomData;
 
 public class YkneoOath extends Applet {
-    public static final byte NAME_TAG = 0x71;
+	public static final byte NAME_TAG = 0x71;
     public static final byte NAME_LIST_TAG = 0x72;
     public static final byte KEY_TAG = 0x73;
     public static final byte CHALLENGE_TAG = 0x74;
@@ -49,609 +49,609 @@ public class YkneoOath extends Applet {
     public static final byte CALCULATE_ALL_INS = (byte)0xa4;
     public static final byte SEND_REMAINING_INS = (byte)0xa5;
 
-    private static final short _0 = 0;
+	private static final short _0 = 0;
 
-    private static final byte CHALLENGE_LENGTH = 8;
+	private static final byte CHALLENGE_LENGTH = 8;
 
-    private byte[] tempBuf;
-    private final byte[] copyBuffer;
+	private byte[] tempBuf;
+	private final byte[] copyBuffer;
 
-    private short nobjects;
+	private short nobjects;
 
-    private OathObj authObj;
-    private OathObj scratchAuth;
-    private byte[] propBuf;
+	private OathObj authObj;
+	private OathObj scratchAuth;
+	private byte[] propBuf;
 
-    private final Object[] currentObj;
+	private final Object[] currentObj;
 
-    private static final byte PROP_AUTH_OFFS = 0;
-    private static final byte PROP_CURRENT_OP_OFFS = 1;
-    private static final byte PROP_CURRENT_P2_OFFS = 2;
-    private static final byte PROP_BUF_SIZE = PROP_CURRENT_P2_OFFS + 1;
+	private static final byte PROP_AUTH_OFFS = 0;
+	private static final byte PROP_CURRENT_OP_OFFS = 1;
+	private static final byte PROP_CURRENT_P2_OFFS = 2;
+	private static final byte PROP_BUF_SIZE = PROP_CURRENT_P2_OFFS + 1;
 
-    private static final short TMP_BUFSIZE = 32;
-    private static final short MAX_OATH_OBJ = 1024;
+	private static final short TMP_BUFSIZE = 32;
+	private static final short MAX_OATH_OBJ = 1024;
 
-    private RandomData rng;
+	private RandomData rng;
 
-    private byte[] identity;
+	private byte[] identity;
 
-    private static final byte[] version = {0x01,0x00,0x02};
+	private static final byte[] version = {0x01,0x00,0x02};
 
-    public YkneoOath() {
-        nobjects = 0;
-        tempBuf = JCSystem.makeTransientByteArray((short) TMP_BUFSIZE, JCSystem.CLEAR_ON_DESELECT);
-        // header+footer+255. May need to adjust when we (maybe in the future) support extended length or after we gauge maximum needed buffer size
-        copyBuffer = JCSystem.makeTransientByteArray((short) 261, JCSystem.CLEAR_ON_DESELECT);
-        propBuf = JCSystem.makeTransientByteArray(PROP_BUF_SIZE, JCSystem.CLEAR_ON_DESELECT);
-        rng = RandomData.getInstance(RandomData.ALG_PSEUDO_RANDOM);
-        currentObj = JCSystem.makeTransientObjectArray((short) 1, JCSystem.CLEAR_ON_DESELECT);
+	public YkneoOath() {
+	        nobjects = 0;
+		tempBuf = JCSystem.makeTransientByteArray((short) TMP_BUFSIZE, JCSystem.CLEAR_ON_DESELECT);
+		// header+footer+255. May need to adjust when we (maybe in the future) support extended length or after we gauge maximum needed buffer size
+		copyBuffer = JCSystem.makeTransientByteArray((short) 261, JCSystem.CLEAR_ON_DESELECT);
+		propBuf = JCSystem.makeTransientByteArray(PROP_BUF_SIZE, JCSystem.CLEAR_ON_DESELECT);
+		rng = RandomData.getInstance(RandomData.ALG_PSEUDO_RANDOM);
+		currentObj = JCSystem.makeTransientObjectArray((short) 1, JCSystem.CLEAR_ON_DESELECT);
 
-        identity = new byte[CHALLENGE_LENGTH];
-        rng.generateData(identity, _0, CHALLENGE_LENGTH);
+		identity = new byte[CHALLENGE_LENGTH];
+		rng.generateData(identity, _0, CHALLENGE_LENGTH);
 
-        authObj = new OathObj();
-        scratchAuth = new OathObj();
-    }
+		authObj = new OathObj();
+		scratchAuth = new OathObj();
+	}
 
-    private OathObj getCurrentObject() {
-        return (OathObj) this.currentObj[0];
-    }
+	private OathObj getCurrentObject() {
+	    return (OathObj) this.currentObj[0];
+	}
 
-    private void setCurrentObject(OathObj obj) {
-        this.currentObj[0] = obj;
-    }
+	private void setCurrentObject(OathObj obj) {
+	    this.currentObj[0] = obj;
+	}
 
-    private void clearCurrentObject() {
-        this.currentObj[0] = null;
-    }
+	private void clearCurrentObject() {
+	    this.currentObj[0] = null;
+	}
 
-    private boolean isCurrentObjectNull() {
-        return (this.currentObj[0] == null);
-    }
+	private boolean isCurrentObjectNull() {
+	    return (this.currentObj[0] == null);
+	}
 
-    private byte getCurrentOp() {
-        return this.propBuf[PROP_CURRENT_OP_OFFS];
-    }
+	private byte getCurrentOp() {
+	    return this.propBuf[PROP_CURRENT_OP_OFFS];
+	}
+	
+	private void setCurrentOp(byte op) {
+	    this.propBuf[PROP_CURRENT_OP_OFFS] = op;
+	}
 
-    private void setCurrentOp(byte op) {
-        this.propBuf[PROP_CURRENT_OP_OFFS] = op;
-    }
+	private void setCurrentP2(byte p2) {
+	    this.propBuf[PROP_CURRENT_P2_OFFS] = p2;
+	}
 
-    private void setCurrentP2(byte p2) {
-        this.propBuf[PROP_CURRENT_P2_OFFS] = p2;
-    }
+	private byte getCurrentP2() {
+	    return this.propBuf[PROP_CURRENT_P2_OFFS];
+	}
 
-    private byte getCurrentP2() {
-        return this.propBuf[PROP_CURRENT_P2_OFFS];
-    }
+	private void clearCheckpoint() {
+            this.clearCurrentObject();
+            this.setCurrentOp((byte) 0);
+            this.setCurrentP2((byte) 0);
+	}
 
-    private void clearCheckpoint() {
-        this.clearCurrentObject();
-        this.setCurrentOp((byte) 0);
-        this.setCurrentP2((byte) 0);
-    }
+	private void clearCopyBuffer() {
+	    Util.arrayFillNonAtomic(this.copyBuffer, _0, (short) this.copyBuffer.length, (byte) 0x00);
+	}
 
-    private void clearCopyBuffer() {
-        Util.arrayFillNonAtomic(this.copyBuffer, _0, (short) this.copyBuffer.length, (byte) 0x00);
-    }
+	public static void install(byte[] bArray, short bOffset, byte bLength) {
+		new YkneoOath().register(bArray, (short) (bOffset + 1), bArray[bOffset]);
+	}
 
-    public static void install(byte[] bArray, short bOffset, byte bLength) {
-        new YkneoOath().register(bArray, (short) (bOffset + 1), bArray[bOffset]);
-    }
+	public void process(APDU apdu) {
+		if (selectingApplet()) {
+			byte[] buf = apdu.getBuffer();
+			short offs = 0;
+			buf[offs++] = VERSION_TAG;
+			buf[offs++] = (byte)version.length;
+			Util.arrayCopyNonAtomic(version, _0, buf, offs, (short) version.length);
+			offs += (byte) version.length;
+			buf[offs++] = NAME_TAG;
+			short nameLen = (short) identity.length;
+			buf[offs++] = (byte) nameLen;
+			Util.arrayCopyNonAtomic(identity, _0, buf, offs, nameLen);
+			offs += nameLen;
 
-    public void process(APDU apdu) {
-        if (selectingApplet()) {
-            byte[] buf = apdu.getBuffer();
-            short offs = 0;
-            buf[offs++] = VERSION_TAG;
-            buf[offs++] = (byte)version.length;
-            Util.arrayCopyNonAtomic(version, _0, buf, offs, (short) version.length);
-            offs += (byte) version.length;
-            buf[offs++] = NAME_TAG;
-            short nameLen = (short) identity.length;
-            buf[offs++] = (byte) nameLen;
-            Util.arrayCopyNonAtomic(identity, _0, buf, offs, nameLen);
-            offs += nameLen;
+			// if the authobj is set add a challenge
+			if(authObj.isActive()) {
+				buf[offs++] = CHALLENGE_TAG;
+				buf[offs++] = CHALLENGE_LENGTH;
+				rng.generateData(buf, offs, CHALLENGE_LENGTH);
+				authObj.calculate(buf, offs, CHALLENGE_LENGTH, tempBuf, _0);
+				offs += CHALLENGE_LENGTH;
+				buf[offs++] = ALGORITHM_TAG;
+				buf[offs++] = 1;
+				buf[offs++] = authObj.getType();
+			}
+			apdu.setOutgoingAndSend(_0, offs);
+			return;
+		}
 
-            // if the authobj is set add a challenge
-            if(authObj.isActive()) {
-                buf[offs++] = CHALLENGE_TAG;
-                buf[offs++] = CHALLENGE_LENGTH;
-                rng.generateData(buf, offs, CHALLENGE_LENGTH);
-                authObj.calculate(buf, offs, CHALLENGE_LENGTH, tempBuf, _0);
-                offs += CHALLENGE_LENGTH;
-                buf[offs++] = ALGORITHM_TAG;
-                buf[offs++] = 1;
-                buf[offs++] = authObj.getType();
-            }
-            apdu.setOutgoingAndSend(_0, offs);
-            return;
-        }
+		byte[] buf = apdu.getBuffer();
+		apdu.setIncomingAndReceive();
+		short sendLen = 0;
 
-        byte[] buf = apdu.getBuffer();
-        apdu.setIncomingAndReceive();
-        short sendLen = 0;
+		byte p1 = buf[ISO7816.OFFSET_P1];
+		byte p2 = buf[ISO7816.OFFSET_P2];
+		short p1p2 = Util.makeShort(p1, p2);
+		byte ins = buf[ISO7816.OFFSET_INS];
 
-        byte p1 = buf[ISO7816.OFFSET_P1];
-        byte p2 = buf[ISO7816.OFFSET_P2];
-        short p1p2 = Util.makeShort(p1, p2);
-        byte ins = buf[ISO7816.OFFSET_INS];
+		if(authObj.isActive() && ins != VALIDATE_INS && ins != RESET_INS) {
+			if(propBuf[PROP_AUTH_OFFS] != 1) {
+				ISOException.throwIt(ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
+			}
+		}
 
-        if(authObj.isActive() && ins != VALIDATE_INS && ins != RESET_INS) {
-            if(propBuf[PROP_AUTH_OFFS] != 1) {
-                ISOException.throwIt(ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
-            }
-        }
+		switch (ins) {
+		case PUT_INS: // put
+			if(p1p2 == 0x0000) {
+				javacard.framework.JCSystem.beginTransaction();
+				handlePut(buf);
+				javacard.framework.JCSystem.commitTransaction();
+			} else {
+				ISOException.throwIt(ISO7816.SW_WRONG_P1P2);
+			}
+			break;
+		case DELETE_INS: // delete
+			if(p1p2 == 0x0000) {
+				javacard.framework.JCSystem.beginTransaction();
+				handleDelete(buf);
+				javacard.framework.JCSystem.commitTransaction();
+			} else {
+				ISOException.throwIt(ISO7816.SW_WRONG_P1P2);
+			}
+			break;
+		case SET_CODE_INS: // set code
+			if(p1p2 == 0x0000) {
+				handleChangeCode(buf);
+			} else {
+				ISOException.throwIt(ISO7816.SW_WRONG_P1P2);
+			}
+			break;
+		case RESET_INS: // reset
+			if(p1p2 == (short)0xdead) {
+				javacard.framework.JCSystem.beginTransaction();
+				handleReset();
+				javacard.framework.JCSystem.commitTransaction();
+			} else {
+				ISOException.throwIt(ISO7816.SW_WRONG_P1P2);
+			}
+			break;
+		case LIST_INS: // list
+			if(p1p2 == 0x0000) {
+				sendLen = handleList(apdu.getBuffer(), false);
+			} else {
+				ISOException.throwIt(ISO7816.SW_WRONG_P1P2);
+			}
+			break;
+		case CALCULATE_INS: // calculate
+			if(p1 == 0x00 && (p2 == 0x00 || p2 == 0x01)) {
+			    Util.arrayCopyNonAtomic(buf, _0, this.copyBuffer, _0, (short) this.copyBuffer.length);
+				sendLen = handleCalc(this.copyBuffer, p2, apdu.getBuffer());
+				// data will be useless after the call finishes, discard.
+				this.clearCopyBuffer();
+			} else {
+				ISOException.throwIt(ISO7816.SW_WRONG_P1P2);
+			}
+			break;
+		case VALIDATE_INS: // validate code
+			if(p1p2 == 0x0000) {
+			    Util.arrayCopyNonAtomic(buf, _0, this.copyBuffer, _0, (short) this.copyBuffer.length);
+				sendLen = handleValidate(this.copyBuffer, apdu.getBuffer());
+				// data will be useless after the call finishes, discard.
+				this.clearCopyBuffer();
+			} else {
+				ISOException.throwIt(ISO7816.SW_WRONG_P1P2);
+			}
+			break;
+		case CALCULATE_ALL_INS: // calculate all codes
+			if(p1 == 0x00 && (p2 == 0x00 || p2 == 0x01)) {
+			    Util.arrayCopyNonAtomic(buf, _0, this.copyBuffer, _0, (short) this.copyBuffer.length);
+				sendLen = handleCalcAll(this.copyBuffer, p2, apdu.getBuffer(), false);
+			} else {
+				ISOException.throwIt(ISO7816.SW_WRONG_P1P2);
+			}
+			break;
+		case SEND_REMAINING_INS: // send data remaining in send buffer
+		        switch (this.getCurrentOp()) {
+		        case LIST_INS:
+		            sendLen = this.handleList(apdu.getBuffer(), true);
+		            break;
+		        case CALCULATE_ALL_INS:
+		            sendLen = this.handleCalcAll(this.copyBuffer, this.getCurrentP2(), apdu.getBuffer(), true);
+		            break;
+		        default:
+		            sendLen = 0;
+		            break;
+		        }
+			break;
+		default:
+			ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
+		}
 
-        switch (ins) {
-        case PUT_INS: // put
-            if(p1p2 == 0x0000) {
-                javacard.framework.JCSystem.beginTransaction();
-                handlePut(buf);
-                javacard.framework.JCSystem.commitTransaction();
-            } else {
-                ISOException.throwIt(ISO7816.SW_WRONG_P1P2);
-            }
-            break;
-        case DELETE_INS: // delete
-            if(p1p2 == 0x0000) {
-                javacard.framework.JCSystem.beginTransaction();
-                handleDelete(buf);
-                javacard.framework.JCSystem.commitTransaction();
-            } else {
-                ISOException.throwIt(ISO7816.SW_WRONG_P1P2);
-            }
-            break;
-        case SET_CODE_INS: // set code
-            if(p1p2 == 0x0000) {
-                handleChangeCode(buf);
-            } else {
-                ISOException.throwIt(ISO7816.SW_WRONG_P1P2);
-            }
-            break;
-        case RESET_INS: // reset
-            if(p1p2 == (short)0xdead) {
-                javacard.framework.JCSystem.beginTransaction();
-                handleReset();
-                javacard.framework.JCSystem.commitTransaction();
-            } else {
-                ISOException.throwIt(ISO7816.SW_WRONG_P1P2);
-            }
-            break;
-        case LIST_INS: // list
-            if(p1p2 == 0x0000) {
-                sendLen = handleList(apdu.getBuffer(), false);
-            } else {
-                ISOException.throwIt(ISO7816.SW_WRONG_P1P2);
-            }
-            break;
-        case CALCULATE_INS: // calculate
-            if(p1 == 0x00 && (p2 == 0x00 || p2 == 0x01)) {
-                Util.arrayCopyNonAtomic(buf, _0, this.copyBuffer, _0, (short) this.copyBuffer.length);
-                sendLen = handleCalc(this.copyBuffer, p2, apdu.getBuffer());
-                // data will be useless after the call finishes, discard.
-                this.clearCopyBuffer();
-            } else {
-                ISOException.throwIt(ISO7816.SW_WRONG_P1P2);
-            }
-            break;
-        case VALIDATE_INS: // validate code
-            if(p1p2 == 0x0000) {
-                Util.arrayCopyNonAtomic(buf, _0, this.copyBuffer, _0, (short) this.copyBuffer.length);
-                sendLen = handleValidate(this.copyBuffer, apdu.getBuffer());
-                // data will be useless after the call finishes, discard.
-                this.clearCopyBuffer();
-            } else {
-                ISOException.throwIt(ISO7816.SW_WRONG_P1P2);
-            }
-            break;
-        case CALCULATE_ALL_INS: // calculate all codes
-            if(p1 == 0x00 && (p2 == 0x00 || p2 == 0x01)) {
-                Util.arrayCopyNonAtomic(buf, _0, this.copyBuffer, _0, (short) this.copyBuffer.length);
-                sendLen = handleCalcAll(this.copyBuffer, p2, apdu.getBuffer(), false);
-            } else {
-                ISOException.throwIt(ISO7816.SW_WRONG_P1P2);
-            }
-            break;
-        case SEND_REMAINING_INS: // send data remaining in send buffer
-            switch (this.getCurrentOp()) {
-            case LIST_INS:
-                sendLen = this.handleList(apdu.getBuffer(), true);
-                break;
-            case CALCULATE_ALL_INS:
-                sendLen = this.handleCalcAll(this.copyBuffer, this.getCurrentP2(), apdu.getBuffer(), true);
-                break;
-            default:
-                sendLen = 0;
-                break;
-            }
-            break;
-        default:
-            ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
-        }
+		if(sendLen > 0) {
+		        apdu.setOutgoingAndSend(_0, sendLen);
+		        short remaining = this.calcRemainingBytes();
+		        if (remaining > 0) {
+		            ISOException.throwIt((short) (ISO7816.SW_BYTES_REMAINING_00 | remaining));
+		        }
+		}
+	}
 
-        if(sendLen > 0) {
-            apdu.setOutgoingAndSend(_0, sendLen);
-            short remaining = this.calcRemainingBytes();
-            if (remaining > 0) {
-                ISOException.throwIt((short) (ISO7816.SW_BYTES_REMAINING_00 | remaining));
-            }
-        }
-    }
+	/**
+	 * Calculate how many bytes are left from information from the checkpoint.
+	 * @return bytes remaining, or 255 if bigger than 255.
+	 */
+	private short calcRemainingBytes() {
+	    short op = this.getCurrentOp();
+	    short result = 0;
+	    // No current operation or the continue point is null, no remaining bytes.
+	    if (op == _0 || this.isCurrentObjectNull()) {
+	        return 0;
+	    }
+	    
+	    for (OathObj obj=this.getCurrentObject(); obj!=null; obj=obj.nextObject) {
+	        if (!obj.isActive()) {
+	            continue;
+	        }
+	        switch (op) {
+	        case LIST_INS:
+	            result += obj.calculateSerializedListEntryLength();
+	            break;
+	        case CALCULATE_ALL_INS:
+	            result += obj.calculateSerializedResponseLength(this.getCurrentP2() != 0x00);
+	            break;
+	        default:
+	            ISOException.throwIt((short) 0x6581);
+	            return 0;
+	        }
+	        // if bigger than or equal to 0xff, return 0xff
+	        if (result >= 0xff) {
+	            return 0xff;
+	        }
+	    }
+	    // otherwise return the actual remaining bytes
+	    return result;
+	}
 
-    /**
-     * Calculate how many bytes are left from information from the checkpoint.
-     * @return bytes remaining, or 255 if bigger than 255.
-     */
-    private short calcRemainingBytes() {
-        short op = this.getCurrentOp();
-        short result = 0;
-        // No current operation or the continue point is null, no remaining bytes.
-        if (op == _0 || this.isCurrentObjectNull()) {
-            return 0;
-        }
+	private void handleReset() {
+		OathObj.firstObject = null;
+		OathObj.lastObject = null;
+		Util.arrayFillNonAtomic(propBuf, _0, PROP_BUF_SIZE, (byte)0);
+		rng.generateData(identity, _0, CHALLENGE_LENGTH);
+		authObj.setActive(false);
+		JCSystem.requestObjectDeletion();
+	}
 
-        for (OathObj obj=this.getCurrentObject(); obj!=null; obj=obj.nextObject) {
-            if (!obj.isActive()) {
-                continue;
-            }
-            switch (op) {
-            case LIST_INS:
-                result += obj.calculateSerializedListEntryLength();
-                break;
-            case CALCULATE_ALL_INS:
-                result += obj.calculateSerializedResponseLength(this.getCurrentP2() != 0x00);
-                break;
-            default:
-                ISOException.throwIt((short) 0x6581);
-                return 0;
-            }
-            // if bigger than or equal to 0xff, return 0xff
-            if (result >= 0xff) {
-                return 0xff;
-            }
-        }
-        // otherwise return the actual remaining bytes
-        return result;
-    }
+	private short handleValidate(byte[] input, byte[] output) {
+		if(!authObj.isActive()) {
+			ISOException.throwIt(ISO7816.SW_DATA_INVALID);
+		}
+		short offs = 5;
+		if(input[offs++] != RESPONSE_TAG) {
+			ISOException.throwIt(ISO7816.SW_WRONG_DATA);
+		}
+		short len = getLength(input, offs);
+		// make sure we're getting as long input as we expect
+		if(len != authObj.getDigestLength()) {
+			ISOException.throwIt(ISO7816.SW_WRONG_DATA);
+		}
+		offs += getLengthBytes(len);
 
-    private void handleReset() {
-        OathObj.firstObject = null;
-        OathObj.lastObject = null;
-        Util.arrayFillNonAtomic(propBuf, _0, PROP_BUF_SIZE, (byte)0);
-        rng.generateData(identity, _0, CHALLENGE_LENGTH);
-        authObj.setActive(false);
-        JCSystem.requestObjectDeletion();
-    }
+		if(Util.arrayCompare(input, offs, tempBuf, _0, len) == 0) {
+			propBuf[PROP_AUTH_OFFS] = 1;
+		} else {
+			ISOException.throwIt(ISO7816.SW_WRONG_DATA);
+		}
+		offs += len;
+		if(input[offs++] != CHALLENGE_TAG) {
+			ISOException.throwIt(ISO7816.SW_WRONG_DATA);
+		}
 
-    private short handleValidate(byte[] input, byte[] output) {
-        if(!authObj.isActive()) {
-            ISOException.throwIt(ISO7816.SW_DATA_INVALID);
-        }
-        short offs = 5;
-        if(input[offs++] != RESPONSE_TAG) {
-            ISOException.throwIt(ISO7816.SW_WRONG_DATA);
-        }
-        short len = getLength(input, offs);
-        // make sure we're getting as long input as we expect
-        if(len != authObj.getDigestLength()) {
-            ISOException.throwIt(ISO7816.SW_WRONG_DATA);
-        }
-        offs += getLengthBytes(len);
+		len = getLength(input, offs);
+		// don't accept a challenge shorter than 8 bytes
+		if(len < 8) {
+			ISOException.throwIt(ISO7816.SW_WRONG_DATA);
+		}
+		offs += getLengthBytes(len);
+		short respLen =  authObj.calculate(input, offs, len, tempBuf, _0);
+		output[0] = RESPONSE_TAG;
+		output[1] = (byte) respLen;
+		Util.arrayCopyNonAtomic(tempBuf, _0, output, (short) 2, respLen);
+		return (short) (respLen + 2);
+	}
 
-        if(Util.arrayCompare(input, offs, tempBuf, _0, len) == 0) {
-            propBuf[PROP_AUTH_OFFS] = 1;
-        } else {
-            ISOException.throwIt(ISO7816.SW_WRONG_DATA);
-        }
-        offs += len;
-        if(input[offs++] != CHALLENGE_TAG) {
-            ISOException.throwIt(ISO7816.SW_WRONG_DATA);
-        }
+	private void handleChangeCode(byte[] buf) {
+		short offs = 5;
+		if(buf[offs++] != KEY_TAG) {
+			ISOException.throwIt(ISO7816.SW_WRONG_DATA);
+		}
+		short len = getLength(buf, offs);
+		offs += getLengthBytes(len);
+		if(len == 0) {
+			authObj.setActive(false);
+		} else {
+			byte type = buf[offs++];
+			scratchAuth.setKey(buf, offs, type, (short) (len - 1));
+			offs += (short)(len - 1);
 
-        len = getLength(input, offs);
-        // don't accept a challenge shorter than 8 bytes
-        if(len < 8) {
-            ISOException.throwIt(ISO7816.SW_WRONG_DATA);
-        }
-        offs += getLengthBytes(len);
-        short respLen =  authObj.calculate(input, offs, len, tempBuf, _0);
-        output[0] = RESPONSE_TAG;
-        output[1] = (byte) respLen;
-        Util.arrayCopyNonAtomic(tempBuf, _0, output, (short) 2, respLen);
-        return (short) (respLen + 2);
-    }
+			if(buf[offs++] != CHALLENGE_TAG) {
+				ISOException.throwIt(ISO7816.SW_WRONG_DATA);
+			}
+			len = getLength(buf, offs);
+			offs += getLengthBytes(len);
+			short respLen = scratchAuth.calculate(buf, offs, len, tempBuf, _0);
+			offs += len;
+			if(buf[offs++] != RESPONSE_TAG) {
+				ISOException.throwIt(ISO7816.SW_WRONG_DATA);
+			}
+			len = getLength(buf, offs);
+			offs += getLengthBytes(len);
+			if(len != respLen) {
+				ISOException.throwIt(ISO7816.SW_WRONG_DATA);
+			}
+			if(Util.arrayCompare(buf, offs, tempBuf, _0, len) == 0) {
+				OathObj oldAuth = authObj;
+				authObj = scratchAuth;
+				scratchAuth = oldAuth;
+				oldAuth.setActive(false);
+				authObj.setActive(true);
+			} else {
+				ISOException.throwIt(ISO7816.SW_DATA_INVALID);
+			}
+		}
+	}
 
-    private void handleChangeCode(byte[] buf) {
-        short offs = 5;
-        if(buf[offs++] != KEY_TAG) {
-            ISOException.throwIt(ISO7816.SW_WRONG_DATA);
-        }
-        short len = getLength(buf, offs);
-        offs += getLengthBytes(len);
-        if(len == 0) {
-            authObj.setActive(false);
-        } else {
-            byte type = buf[offs++];
-            scratchAuth.setKey(buf, offs, type, (short) (len - 1));
-            offs += (short)(len - 1);
+	private short handleCalc(byte[] challenge, byte p2, byte[] output) {
+		short offs = 5;
+		if(challenge[offs++] != NAME_TAG) {
+			ISOException.throwIt(ISO7816.SW_WRONG_DATA);
+		}
+		short len = getLength(challenge, offs);
+		offs += getLengthBytes(len);
+		OathObj object = OathObj.findObject(challenge, offs, len);
+		if(object == null) {
+			ISOException.throwIt(ISO7816.SW_DATA_INVALID);
+		}
+		offs += len;
 
-            if(buf[offs++] != CHALLENGE_TAG) {
-                ISOException.throwIt(ISO7816.SW_WRONG_DATA);
-            }
-            len = getLength(buf, offs);
-            offs += getLengthBytes(len);
-            short respLen = scratchAuth.calculate(buf, offs, len, tempBuf, _0);
-            offs += len;
-            if(buf[offs++] != RESPONSE_TAG) {
-                ISOException.throwIt(ISO7816.SW_WRONG_DATA);
-            }
-            len = getLength(buf, offs);
-            offs += getLengthBytes(len);
-            if(len != respLen) {
-                ISOException.throwIt(ISO7816.SW_WRONG_DATA);
-            }
-            if(Util.arrayCompare(buf, offs, tempBuf, _0, len) == 0) {
-                OathObj oldAuth = authObj;
-                authObj = scratchAuth;
-                scratchAuth = oldAuth;
-                oldAuth.setActive(false);
-                authObj.setActive(true);
-            } else {
-                ISOException.throwIt(ISO7816.SW_DATA_INVALID);
-            }
-        }
-    }
-
-    private short handleCalc(byte[] challenge, byte p2, byte[] output) {
-        short offs = 5;
-        if(challenge[offs++] != NAME_TAG) {
-            ISOException.throwIt(ISO7816.SW_WRONG_DATA);
-        }
-        short len = getLength(challenge, offs);
-        offs += getLengthBytes(len);
-        OathObj object = OathObj.findObject(challenge, offs, len);
-        if(object == null) {
-            ISOException.throwIt(ISO7816.SW_DATA_INVALID);
-        }
-        offs += len;
-
-        if(challenge[offs++] != CHALLENGE_TAG) {
-            ISOException.throwIt(ISO7816.SW_WRONG_DATA);
-        }
-        len = getLength(challenge, offs);
-        offs += getLengthBytes(len);
+		if(challenge[offs++] != CHALLENGE_TAG) {
+			ISOException.throwIt(ISO7816.SW_WRONG_DATA);
+		}
+		len = getLength(challenge, offs);
+		offs += getLengthBytes(len);
         short respOffs = 0;
-        if(p2 == 0x00) {
-            len = object.calculate(challenge, offs, len, tempBuf, _0);
-            output[respOffs++] = RESPONSE_TAG;
-        } else {
-            len = object.calculateTruncated(challenge, offs, len, tempBuf, _0);
-            output[respOffs++] = T_RESPONSE_TAG;
-        }
+		if(p2 == 0x00) {
+			len = object.calculate(challenge, offs, len, tempBuf, _0);
+			output[respOffs++] = RESPONSE_TAG;
+		} else {
+			len = object.calculateTruncated(challenge, offs, len, tempBuf, _0);
+			output[respOffs++] = T_RESPONSE_TAG;
+		}
 
-        respOffs += setLength(output, respOffs, (short) (len + 1));
-        output[respOffs++] = object.getDigits();
-        Util.arrayCopyNonAtomic(tempBuf, _0, output, respOffs, len);
+		respOffs += setLength(output, respOffs, (short) (len + 1));
+		output[respOffs++] = object.getDigits();
+		Util.arrayCopyNonAtomic(tempBuf, _0, output, respOffs, len);
 
-        return (short) (len + getLengthBytes(len) + 2);
-    }
+		return (short) (len + getLengthBytes(len) + 2);
+	}
 
-    private short handleCalcAll(byte[] challenge, byte p2, byte[] output, boolean isContinue) {
-            short remaining = (short) output.length;
-        short offs = 5;
-        boolean truncated = (p2 != 0x00);
-        if(challenge[offs++] != CHALLENGE_TAG) {
-            ISOException.throwIt(ISO7816.SW_WRONG_DATA);
-        }
-        short chalLen = getLength(challenge, offs++);
-        Util.arrayCopyNonAtomic(challenge, offs, tempBuf, _0, chalLen);
+	private short handleCalcAll(byte[] challenge, byte p2, byte[] output, boolean isContinue) {
+	        short remaining = (short) output.length;
+		short offs = 5;
+		boolean truncated = (p2 != 0x00);
+		if(challenge[offs++] != CHALLENGE_TAG) {
+			ISOException.throwIt(ISO7816.SW_WRONG_DATA);
+		}
+		short chalLen = getLength(challenge, offs++);
+		Util.arrayCopyNonAtomic(challenge, offs, tempBuf, _0, chalLen);
 
-        offs = 0;
-        OathObj obj;
-        if (!isContinue) {
-            this.clearCheckpoint();
-            obj = OathObj.firstObject;
-        } else if (!this.isCurrentObjectNull()) {
-            obj = this.getCurrentObject();
-        } else {
-            this.clearCheckpoint();
-            this.clearCopyBuffer();
-            ISOException.throwIt((short) 0x6581);
-            return 0;
-        }
-        for(; obj != null; obj = obj.nextObject) {
-                short serializedLen = obj.calculateSerializedResponseLength(truncated);
-            if(!obj.isActive()) {
-                continue;
-            }
-            if (remaining < serializedLen) {
-                // create checkpoint and exit
-                this.setCurrentOp(CALCULATE_ALL_INS);
-                this.setCurrentObject(obj);
-                this.setCurrentP2(p2);
-                break;
-            }
-            output[offs++] = NAME_TAG;
-            output[offs++] = (byte) obj.getNameLength();
-            offs += obj.getName(output, offs);
-            short len = 0;
-            if((obj.getType() & OathObj.OATH_MASK) == OathObj.TOTP_TYPE) {
-                if(!truncated) {
-                    output[offs++] = RESPONSE_TAG;
-                    len = obj.calculate(tempBuf, _0, chalLen, output, (short) (offs + 2));
-                } else {
-                    output[offs++] = T_RESPONSE_TAG;
-                    len = obj.calculateTruncated(tempBuf, _0, chalLen, output, (short) (offs + 2));
-                }
-            } else {
-                output[offs++] = NO_RESPONSE_TAG;
-            }
-            output[offs++] = (byte) (len + 1);
-            output[offs++] = obj.getDigits();
-            offs += len;
-            remaining -= serializedLen;
-        }
-        if (obj == null) {
-            this.clearCheckpoint();
-            this.clearCopyBuffer();
-        }
-        return offs;
-    }
+		offs = 0;
+		OathObj obj;
+		if (!isContinue) {
+		    this.clearCheckpoint();
+		    obj = OathObj.firstObject;
+		} else if (!this.isCurrentObjectNull()) {
+		    obj = this.getCurrentObject();
+		} else {
+		    this.clearCheckpoint();
+		    this.clearCopyBuffer();
+		    ISOException.throwIt((short) 0x6581);
+		    return 0;
+		}
+		for(; obj != null; obj = obj.nextObject) {
+		        short serializedLen = obj.calculateSerializedResponseLength(truncated);
+			if(!obj.isActive()) {
+				continue;
+			}
+			if (remaining < serializedLen) {
+			    // create checkpoint and exit
+			    this.setCurrentOp(CALCULATE_ALL_INS);
+			    this.setCurrentObject(obj);
+			    this.setCurrentP2(p2);
+			    break;
+			}
+			output[offs++] = NAME_TAG;
+			output[offs++] = (byte) obj.getNameLength();
+			offs += obj.getName(output, offs);
+			short len = 0;
+			if((obj.getType() & OathObj.OATH_MASK) == OathObj.TOTP_TYPE) {
+				if(!truncated) {
+					output[offs++] = RESPONSE_TAG;
+					len = obj.calculate(tempBuf, _0, chalLen, output, (short) (offs + 2));
+				} else {
+					output[offs++] = T_RESPONSE_TAG;
+					len = obj.calculateTruncated(tempBuf, _0, chalLen, output, (short) (offs + 2));
+				}
+			} else {
+				output[offs++] = NO_RESPONSE_TAG;
+			}
+			output[offs++] = (byte) (len + 1);
+			output[offs++] = obj.getDigits();
+			offs += len;
+			remaining -= serializedLen;
+		}
+		if (obj == null) {
+		    this.clearCheckpoint();
+		    this.clearCopyBuffer();
+		}
+		return offs;
+	}
 
-    private short handleList(byte[] output, boolean isContinue) {
-        short offs = 0;
-        short remaining = (short) output.length;
-        OathObj object;
-        if (!isContinue) {
-            this.clearCheckpoint();
-            object = OathObj.firstObject;
-        } else if (!this.isCurrentObjectNull()) {
-            object = this.getCurrentObject();
-        } else {
-            this.clearCheckpoint();
-                ISOException.throwIt((short) 0x6581);
-            return 0;
-        }
-        for(; object != null; object = object.nextObject) {
-                short length = object.calculateSerializedListEntryLength();
-            if(!object.isActive()) {
-                continue;
-            }
-            if (remaining < length) {
-                // create checkpoint and exit
-                this.setCurrentObject(object);
-                this.setCurrentOp(LIST_INS);
-                break;
-            }
-            output[offs++] = NAME_LIST_TAG;
-            output[offs++] = (byte) (object.getNameLength() + 1);
-            output[offs++] = object.getType();
-            offs += object.getName(output, offs);
-            remaining -= length;
-        }
-        if (object == null) {
-            this.clearCheckpoint();
-        }
-        return offs;
-    }
+	private short handleList(byte[] output, boolean isContinue) {
+		short offs = 0;
+		short remaining = (short) output.length;
+		OathObj object;
+		if (!isContinue) {
+		    this.clearCheckpoint();
+		    object = OathObj.firstObject;
+		} else if (!this.isCurrentObjectNull()) {
+		    object = this.getCurrentObject();
+		} else {
+		    this.clearCheckpoint();
+	            ISOException.throwIt((short) 0x6581);
+		    return 0;
+		}
+		for(; object != null; object = object.nextObject) {
+		        short length = object.calculateSerializedListEntryLength();
+			if(!object.isActive()) {
+				continue;
+			}
+			if (remaining < length) {
+			    // create checkpoint and exit
+			    this.setCurrentObject(object);
+			    this.setCurrentOp(LIST_INS);
+			    break;
+			}
+			output[offs++] = NAME_LIST_TAG;
+			output[offs++] = (byte) (object.getNameLength() + 1);
+			output[offs++] = object.getType();
+			offs += object.getName(output, offs);
+			remaining -= length;
+		}
+		if (object == null) {
+		    this.clearCheckpoint();
+		}
+		return offs;
+	}
 
-    private void handleDelete(byte[] buf) {
-        short offs = ISO7816.OFFSET_CDATA;
-        if(buf[offs++] != NAME_TAG) {
-            ISOException.throwIt(ISO7816.SW_WRONG_DATA);
-        }
-        short len = getLength(buf, offs);
-        offs += getLengthBytes(len);
-        OathObj object = OathObj.findObject(buf, offs, len);
-        if(object != null) {
-            object.setActive(false);
-            this.nobjects--;
-        } else {
-            ISOException.throwIt(ISO7816.SW_DATA_INVALID);
-        }
-    }
+	private void handleDelete(byte[] buf) {
+		short offs = ISO7816.OFFSET_CDATA;
+		if(buf[offs++] != NAME_TAG) {
+			ISOException.throwIt(ISO7816.SW_WRONG_DATA);
+		}
+		short len = getLength(buf, offs);
+		offs += getLengthBytes(len);
+		OathObj object = OathObj.findObject(buf, offs, len);
+		if(object != null) {
+			object.setActive(false);
+			this.nobjects--;
+		} else {
+			ISOException.throwIt(ISO7816.SW_DATA_INVALID);
+		}
+	}
 
-    private void handlePut(byte[] buf) {
-        short offs = ISO7816.OFFSET_CDATA;
-        if(buf[offs++] != NAME_TAG) {
-            ISOException.throwIt(ISO7816.SW_WRONG_DATA);
-        }
-        short len = getLength(buf, offs);
-        offs += getLengthBytes(len);
+	private void handlePut(byte[] buf) {
+		short offs = ISO7816.OFFSET_CDATA;
+		if(buf[offs++] != NAME_TAG) {
+			ISOException.throwIt(ISO7816.SW_WRONG_DATA);
+		}
+		short len = getLength(buf, offs);
+		offs += getLengthBytes(len);
 
-        if (this.nobjects > MAX_OATH_OBJ) {
-            // the output will be longer than we can support, error out.
-            ISOException.throwIt(ISO7816.SW_FILE_FULL);
-        }
+		if (this.nobjects > MAX_OATH_OBJ) {
+			// the output will be longer than we can support, error out.
+			ISOException.throwIt(ISO7816.SW_FILE_FULL);
+		}
 
-        OathObj object = OathObj.findObject(buf, offs, len);
-        if(object == null) {
-            object = OathObj.getFreeObject();
-            object.setName(buf, offs, len);
-        }
-        offs += len;
+		OathObj object = OathObj.findObject(buf, offs, len);
+		if(object == null) {
+			object = OathObj.getFreeObject();
+			object.setName(buf, offs, len);
+		}
+		offs += len;
 
-        if(buf[offs++] != KEY_TAG) {
-            ISOException.throwIt(ISO7816.SW_WRONG_DATA);
-        }
-        len = getLength(buf, offs);
-        offs += getLengthBytes(len);
+		if(buf[offs++] != KEY_TAG) {
+			ISOException.throwIt(ISO7816.SW_WRONG_DATA);
+		}
+		len = getLength(buf, offs);
+		offs += getLengthBytes(len);
 
-        byte keyType = buf[offs++];
-        if((keyType & OathObj.HMAC_MASK) != OathObj.HMAC_SHA1 && (keyType & OathObj.HMAC_MASK) != OathObj.HMAC_SHA256) {
-            ISOException.throwIt(ISO7816.SW_WRONG_DATA);
-        }
-        if((keyType & OathObj.OATH_MASK) != OathObj.TOTP_TYPE && (keyType & OathObj.OATH_MASK) != OathObj.HOTP_TYPE) {
-            ISOException.throwIt(ISO7816.SW_WRONG_DATA);
-        }
-        byte digits = buf[offs++];
+		byte keyType = buf[offs++];
+		if((keyType & OathObj.HMAC_MASK) != OathObj.HMAC_SHA1 && (keyType & OathObj.HMAC_MASK) != OathObj.HMAC_SHA256) {
+			ISOException.throwIt(ISO7816.SW_WRONG_DATA);
+		}
+		if((keyType & OathObj.OATH_MASK) != OathObj.TOTP_TYPE && (keyType & OathObj.OATH_MASK) != OathObj.HOTP_TYPE) {
+			ISOException.throwIt(ISO7816.SW_WRONG_DATA);
+		}
+		byte digits = buf[offs++];
 
-        // protect against tearing (we want to do this as late as possible)
-        object.setActive(false);
-        object.setDigits(digits);
+		// protect against tearing (we want to do this as late as possible)
+		object.setActive(false);
+		object.setDigits(digits);
 
-        object.setKey(buf, offs, keyType, (short) (len - 2));
-        offs += (short)(len - 2);
+		object.setKey(buf, offs, keyType, (short) (len - 2));
+		offs += (short)(len - 2);
 
-        if(offs < buf.length && buf[offs] == PROPERTY_TAG) {
-            offs++;
-            object.setProp(buf[offs++]);
-        } else {
-            object.setProp((byte) 0);
-        }
-        if(offs < buf.length && buf[offs] == IMF_TAG) {
-            offs++;
-            if(buf[offs++] == OathObj.IMF_LEN) {
-                object.setImf(buf, offs);
-                offs += OathObj.IMF_LEN;
-            } else {
-                ISOException.throwIt(ISO7816.SW_WRONG_DATA);
-            }
-        } else {
-            object.clearImf();
-        }
-        object.setActive(true);
-        this.nobjects++;
-    }
+		if(offs < buf.length && buf[offs] == PROPERTY_TAG) {
+			offs++;
+			object.setProp(buf[offs++]);
+		} else {
+			object.setProp((byte) 0);
+		}
+		if(offs < buf.length && buf[offs] == IMF_TAG) {
+			offs++;
+			if(buf[offs++] == OathObj.IMF_LEN) {
+				object.setImf(buf, offs);
+				offs += OathObj.IMF_LEN;
+			} else {
+				ISOException.throwIt(ISO7816.SW_WRONG_DATA);
+			}
+		} else {
+			object.clearImf();
+		}
+		object.setActive(true);
+		this.nobjects++;
+	}
 
-    private short getLength(byte[] buf, short offs) {
-        short length = 0;
-        if(buf[offs] <= 0x7f) {
-            length = buf[offs];
-        } else if(buf[offs] == (byte)0x81) {
-            length = buf[(short)(offs + 1)];
-        } else if(buf[offs] == (byte)0x82) {
-            length = Util.getShort(buf, (short) (offs + 1));
-        } else {
-            ISOException.throwIt(ISO7816.SW_DATA_INVALID);
-        }
-        return length;
-    }
+	private short getLength(byte[] buf, short offs) {
+		short length = 0;
+		if(buf[offs] <= 0x7f) {
+			length = buf[offs];
+		} else if(buf[offs] == (byte)0x81) {
+			length = buf[(short)(offs + 1)];
+		} else if(buf[offs] == (byte)0x82) {
+			length = Util.getShort(buf, (short) (offs + 1));
+		} else {
+			ISOException.throwIt(ISO7816.SW_DATA_INVALID);
+		}
+		return length;
+	}
 
-    private short getLengthBytes(short len) {
-        if(len < (short)0x0080) {
-            return 1;
-        } else if(len <= (short)0x00ff) {
-            return 2;
-        } else {
-            return 3;
-        }
-    }
+	private short getLengthBytes(short len) {
+		if(len < (short)0x0080) {
+			return 1;
+		} else if(len <= (short)0x00ff) {
+			return 2;
+		} else {
+			return 3;
+		}
+	}
 
-    private short setLength(byte[] buf, short offs, short len) {
-        if(len < (short)0x0080) {
-            buf[offs] = (byte) len;
-            return 1;
-        } else if(len <= (short)0x00ff) {
-            buf[offs++] = (byte)0x81;
-            buf[offs] = (byte) len;
-            return 2;
-        } else {
-            buf[offs++] = (byte)0x82;
-            Util.setShort(buf, offs, len);
-            return 3;
-        }
-    }
+	private short setLength(byte[] buf, short offs, short len) {
+		if(len < (short)0x0080) {
+			buf[offs] = (byte) len;
+			return 1;
+		} else if(len <= (short)0x00ff) {
+			buf[offs++] = (byte)0x81;
+			buf[offs] = (byte) len;
+			return 2;
+		} else {
+			buf[offs++] = (byte)0x82;
+			Util.setShort(buf, offs, len);
+			return 3;
+		}
+	}
 }
