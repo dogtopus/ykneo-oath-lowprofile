@@ -27,27 +27,27 @@ import javacard.security.RandomData;
 
 public class YkneoOath extends Applet {
 	public static final byte NAME_TAG = 0x71;
-    public static final byte NAME_LIST_TAG = 0x72;
-    public static final byte KEY_TAG = 0x73;
-    public static final byte CHALLENGE_TAG = 0x74;
-    public static final byte RESPONSE_TAG = 0x75;
-    public static final byte T_RESPONSE_TAG = 0x76;
-    public static final byte NO_RESPONSE_TAG = 0x77;
-    public static final byte PROPERTY_TAG = 0x78;
-    public static final byte VERSION_TAG = 0x79;
-    public static final byte IMF_TAG = 0x7a;
-    public static final byte ALGORITHM_TAG = 0x7b;
+	public static final byte NAME_LIST_TAG = 0x72;
+	public static final byte KEY_TAG = 0x73;
+	public static final byte CHALLENGE_TAG = 0x74;
+	public static final byte RESPONSE_TAG = 0x75;
+	public static final byte T_RESPONSE_TAG = 0x76;
+	public static final byte NO_RESPONSE_TAG = 0x77;
+	public static final byte PROPERTY_TAG = 0x78;
+	public static final byte VERSION_TAG = 0x79;
+	public static final byte IMF_TAG = 0x7a;
+	public static final byte ALGORITHM_TAG = 0x7b;
 
-    public static final byte PUT_INS = 0x01;
-    public static final byte DELETE_INS = 0x02;
-    public static final byte SET_CODE_INS = 0x03;
-    public static final byte RESET_INS = 0x04;
+	public static final byte PUT_INS = 0x01;
+	public static final byte DELETE_INS = 0x02;
+	public static final byte SET_CODE_INS = 0x03;
+	public static final byte RESET_INS = 0x04;
 
-    public static final byte LIST_INS = (byte)0xa1;
-    public static final byte CALCULATE_INS = (byte)0xa2;
-    public static final byte VALIDATE_INS = (byte)0xa3;
-    public static final byte CALCULATE_ALL_INS = (byte)0xa4;
-    public static final byte SEND_REMAINING_INS = (byte)0xa5;
+	public static final byte LIST_INS = (byte)0xa1;
+	public static final byte CALCULATE_INS = (byte)0xa2;
+	public static final byte VALIDATE_INS = (byte)0xa3;
+	public static final byte CALCULATE_ALL_INS = (byte)0xa4;
+	public static final byte SEND_REMAINING_INS = (byte)0xa5;
 
 	private static final short _0 = 0;
 
@@ -79,7 +79,7 @@ public class YkneoOath extends Applet {
 	private static final byte[] version = {0x01,0x00,0x02};
 
 	public YkneoOath() {
-	        nobjects = 0;
+			nobjects = 0;
 		tempBuf = JCSystem.makeTransientByteArray((short) TMP_BUFSIZE, JCSystem.CLEAR_ON_DESELECT);
 		// header+footer+255. May need to adjust when we (maybe in the future) support extended length or after we gauge maximum needed buffer size
 		copyBuffer = JCSystem.makeTransientByteArray((short) 261, JCSystem.CLEAR_ON_DESELECT);
@@ -95,45 +95,45 @@ public class YkneoOath extends Applet {
 	}
 
 	private OathObj getCurrentObject() {
-	    return (OathObj) this.currentObj[0];
+		return (OathObj) this.currentObj[0];
 	}
 
 	private void setCurrentObject(OathObj obj) {
-	    this.currentObj[0] = obj;
+		this.currentObj[0] = obj;
 	}
 
 	private void clearCurrentObject() {
-	    this.currentObj[0] = null;
+		this.currentObj[0] = null;
 	}
 
 	private boolean isCurrentObjectNull() {
-	    return (this.currentObj[0] == null);
+		return (this.currentObj[0] == null);
 	}
 
 	private byte getCurrentOp() {
-	    return this.propBuf[PROP_CURRENT_OP_OFFS];
+		return this.propBuf[PROP_CURRENT_OP_OFFS];
 	}
 	
 	private void setCurrentOp(byte op) {
-	    this.propBuf[PROP_CURRENT_OP_OFFS] = op;
+		this.propBuf[PROP_CURRENT_OP_OFFS] = op;
 	}
 
 	private void setCurrentP2(byte p2) {
-	    this.propBuf[PROP_CURRENT_P2_OFFS] = p2;
+		this.propBuf[PROP_CURRENT_P2_OFFS] = p2;
 	}
 
 	private byte getCurrentP2() {
-	    return this.propBuf[PROP_CURRENT_P2_OFFS];
+		return this.propBuf[PROP_CURRENT_P2_OFFS];
 	}
 
 	private void clearCheckpoint() {
-            this.clearCurrentObject();
-            this.setCurrentOp((byte) 0);
-            this.setCurrentP2((byte) 0);
+			this.clearCurrentObject();
+			this.setCurrentOp((byte) 0);
+			this.setCurrentP2((byte) 0);
 	}
 
 	private void clearCopyBuffer() {
-	    Util.arrayFillNonAtomic(this.copyBuffer, _0, (short) this.copyBuffer.length, (byte) 0x00);
+		Util.arrayFillNonAtomic(this.copyBuffer, _0, (short) this.copyBuffer.length, (byte) 0x00);
 	}
 
 	public static void install(byte[] bArray, short bOffset, byte bLength) {
@@ -228,7 +228,7 @@ public class YkneoOath extends Applet {
 			break;
 		case CALCULATE_INS: // calculate
 			if(p1 == 0x00 && (p2 == 0x00 || p2 == 0x01)) {
-			    Util.arrayCopyNonAtomic(buf, _0, this.copyBuffer, _0, (short) this.copyBuffer.length);
+				Util.arrayCopyNonAtomic(buf, _0, this.copyBuffer, _0, (short) this.copyBuffer.length);
 				sendLen = handleCalc(this.copyBuffer, p2, apdu.getBuffer());
 				// data will be useless after the call finishes, discard.
 				this.clearCopyBuffer();
@@ -238,7 +238,7 @@ public class YkneoOath extends Applet {
 			break;
 		case VALIDATE_INS: // validate code
 			if(p1p2 == 0x0000) {
-			    Util.arrayCopyNonAtomic(buf, _0, this.copyBuffer, _0, (short) this.copyBuffer.length);
+				Util.arrayCopyNonAtomic(buf, _0, this.copyBuffer, _0, (short) this.copyBuffer.length);
 				sendLen = handleValidate(this.copyBuffer, apdu.getBuffer());
 				// data will be useless after the call finishes, discard.
 				this.clearCopyBuffer();
@@ -248,35 +248,35 @@ public class YkneoOath extends Applet {
 			break;
 		case CALCULATE_ALL_INS: // calculate all codes
 			if(p1 == 0x00 && (p2 == 0x00 || p2 == 0x01)) {
-			    Util.arrayCopyNonAtomic(buf, _0, this.copyBuffer, _0, (short) this.copyBuffer.length);
+				Util.arrayCopyNonAtomic(buf, _0, this.copyBuffer, _0, (short) this.copyBuffer.length);
 				sendLen = handleCalcAll(this.copyBuffer, p2, apdu.getBuffer(), false);
 			} else {
 				ISOException.throwIt(ISO7816.SW_WRONG_P1P2);
 			}
 			break;
 		case SEND_REMAINING_INS: // send data remaining in send buffer
-		        switch (this.getCurrentOp()) {
-		        case LIST_INS:
-		            sendLen = this.handleList(apdu.getBuffer(), true);
-		            break;
-		        case CALCULATE_ALL_INS:
-		            sendLen = this.handleCalcAll(this.copyBuffer, this.getCurrentP2(), apdu.getBuffer(), true);
-		            break;
-		        default:
-		            sendLen = 0;
-		            break;
-		        }
+				switch (this.getCurrentOp()) {
+				case LIST_INS:
+					sendLen = this.handleList(apdu.getBuffer(), true);
+					break;
+				case CALCULATE_ALL_INS:
+					sendLen = this.handleCalcAll(this.copyBuffer, this.getCurrentP2(), apdu.getBuffer(), true);
+					break;
+				default:
+					sendLen = 0;
+					break;
+				}
 			break;
 		default:
 			ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
 		}
 
 		if(sendLen > 0) {
-		        apdu.setOutgoingAndSend(_0, sendLen);
-		        short remaining = this.calcRemainingBytes();
-		        if (remaining > 0) {
-		            ISOException.throwIt((short) (ISO7816.SW_BYTES_REMAINING_00 | remaining));
-		        }
+				apdu.setOutgoingAndSend(_0, sendLen);
+				short remaining = this.calcRemainingBytes();
+				if (remaining > 0) {
+					ISOException.throwIt((short) (ISO7816.SW_BYTES_REMAINING_00 | remaining));
+				}
 		}
 	}
 
@@ -285,35 +285,35 @@ public class YkneoOath extends Applet {
 	 * @return bytes remaining, or 255 if bigger than 255.
 	 */
 	private short calcRemainingBytes() {
-	    short op = this.getCurrentOp();
-	    short result = 0;
-	    // No current operation or the continue point is null, no remaining bytes.
-	    if (op == _0 || this.isCurrentObjectNull()) {
-	        return 0;
-	    }
-	    
-	    for (OathObj obj=this.getCurrentObject(); obj!=null; obj=obj.nextObject) {
-	        if (!obj.isActive()) {
-	            continue;
-	        }
-	        switch (op) {
-	        case LIST_INS:
-	            result += obj.calculateSerializedListEntryLength();
-	            break;
-	        case CALCULATE_ALL_INS:
-	            result += obj.calculateSerializedResponseLength(this.getCurrentP2() != 0x00);
-	            break;
-	        default:
-	            ISOException.throwIt((short) 0x6581);
-	            return 0;
-	        }
-	        // if bigger than or equal to 0xff, return 0xff
-	        if (result >= 0xff) {
-	            return 0xff;
-	        }
-	    }
-	    // otherwise return the actual remaining bytes
-	    return result;
+		short op = this.getCurrentOp();
+		short result = 0;
+		// No current operation or the continue point is null, no remaining bytes.
+		if (op == _0 || this.isCurrentObjectNull()) {
+			return 0;
+		}
+		
+		for (OathObj obj=this.getCurrentObject(); obj!=null; obj=obj.nextObject) {
+			if (!obj.isActive()) {
+				continue;
+			}
+			switch (op) {
+			case LIST_INS:
+				result += obj.calculateSerializedListEntryLength();
+				break;
+			case CALCULATE_ALL_INS:
+				result += obj.calculateSerializedResponseLength(this.getCurrentP2() != 0x00);
+				break;
+			default:
+				ISOException.throwIt((short) 0x6581);
+				return 0;
+			}
+			// if bigger than or equal to 0xff, return 0xff
+			if (result >= 0xff) {
+				return 0xff;
+			}
+		}
+		// otherwise return the actual remaining bytes
+		return result;
 	}
 
 	private void handleReset() {
@@ -422,7 +422,7 @@ public class YkneoOath extends Applet {
 		}
 		len = getLength(challenge, offs);
 		offs += getLengthBytes(len);
-        short respOffs = 0;
+		short respOffs = 0;
 		if(p2 == 0x00) {
 			len = object.calculate(challenge, offs, len, tempBuf, _0);
 			output[respOffs++] = RESPONSE_TAG;
@@ -439,7 +439,7 @@ public class YkneoOath extends Applet {
 	}
 
 	private short handleCalcAll(byte[] challenge, byte p2, byte[] output, boolean isContinue) {
-	        short remaining = (short) output.length;
+			short remaining = (short) output.length;
 		short offs = 5;
 		boolean truncated = (p2 != 0x00);
 		if(challenge[offs++] != CHALLENGE_TAG) {
@@ -451,27 +451,27 @@ public class YkneoOath extends Applet {
 		offs = 0;
 		OathObj obj;
 		if (!isContinue) {
-		    this.clearCheckpoint();
-		    obj = OathObj.firstObject;
+			this.clearCheckpoint();
+			obj = OathObj.firstObject;
 		} else if (!this.isCurrentObjectNull()) {
-		    obj = this.getCurrentObject();
+			obj = this.getCurrentObject();
 		} else {
-		    this.clearCheckpoint();
-		    this.clearCopyBuffer();
-		    ISOException.throwIt((short) 0x6581);
-		    return 0;
+			this.clearCheckpoint();
+			this.clearCopyBuffer();
+			ISOException.throwIt((short) 0x6581);
+			return 0;
 		}
 		for(; obj != null; obj = obj.nextObject) {
-		        short serializedLen = obj.calculateSerializedResponseLength(truncated);
+				short serializedLen = obj.calculateSerializedResponseLength(truncated);
 			if(!obj.isActive()) {
 				continue;
 			}
 			if (remaining < serializedLen) {
-			    // create checkpoint and exit
-			    this.setCurrentOp(CALCULATE_ALL_INS);
-			    this.setCurrentObject(obj);
-			    this.setCurrentP2(p2);
-			    break;
+				// create checkpoint and exit
+				this.setCurrentOp(CALCULATE_ALL_INS);
+				this.setCurrentObject(obj);
+				this.setCurrentP2(p2);
+				break;
 			}
 			output[offs++] = NAME_TAG;
 			output[offs++] = (byte) obj.getNameLength();
@@ -494,8 +494,8 @@ public class YkneoOath extends Applet {
 			remaining -= serializedLen;
 		}
 		if (obj == null) {
-		    this.clearCheckpoint();
-		    this.clearCopyBuffer();
+			this.clearCheckpoint();
+			this.clearCopyBuffer();
 		}
 		return offs;
 	}
@@ -505,25 +505,25 @@ public class YkneoOath extends Applet {
 		short remaining = (short) output.length;
 		OathObj object;
 		if (!isContinue) {
-		    this.clearCheckpoint();
-		    object = OathObj.firstObject;
+			this.clearCheckpoint();
+			object = OathObj.firstObject;
 		} else if (!this.isCurrentObjectNull()) {
-		    object = this.getCurrentObject();
+			object = this.getCurrentObject();
 		} else {
-		    this.clearCheckpoint();
-	            ISOException.throwIt((short) 0x6581);
-		    return 0;
+			this.clearCheckpoint();
+				ISOException.throwIt((short) 0x6581);
+			return 0;
 		}
 		for(; object != null; object = object.nextObject) {
-		        short length = object.calculateSerializedListEntryLength();
+				short length = object.calculateSerializedListEntryLength();
 			if(!object.isActive()) {
 				continue;
 			}
 			if (remaining < length) {
-			    // create checkpoint and exit
-			    this.setCurrentObject(object);
-			    this.setCurrentOp(LIST_INS);
-			    break;
+				// create checkpoint and exit
+				this.setCurrentObject(object);
+				this.setCurrentOp(LIST_INS);
+				break;
 			}
 			output[offs++] = NAME_LIST_TAG;
 			output[offs++] = (byte) (object.getNameLength() + 1);
@@ -532,7 +532,7 @@ public class YkneoOath extends Applet {
 			remaining -= length;
 		}
 		if (object == null) {
-		    this.clearCheckpoint();
+			this.clearCheckpoint();
 		}
 		return offs;
 	}

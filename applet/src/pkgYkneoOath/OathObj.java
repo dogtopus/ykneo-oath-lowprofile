@@ -99,10 +99,10 @@ public class OathObj {
 		this.counter = 0;
 		Util.arrayFillNonAtomic(inner, _0, hmac_buf_size, (byte) 0x36);
 		Util.arrayFillNonAtomic(outer, _0, hmac_buf_size, (byte) 0x5c);
-        for (short i = 0; i < len; i++, offs++) {
-            inner[i] = (byte) (buf[offs] ^ 0x36);
-            outer[i] = (byte) (buf[offs] ^ 0x5c);
-        }
+		for (short i = 0; i < len; i++, offs++) {
+			inner[i] = (byte) (buf[offs] ^ 0x36);
+			outer[i] = (byte) (buf[offs] ^ 0x5c);
+		}
 	}
 
 	public void setDigits(byte digits) {
@@ -134,21 +134,21 @@ public class OathObj {
 		return (short) nameLen;
 	}
 
-    public short calculateSerializedResponseLength(boolean truncated) {
-        // magic + nameLength + name (var) + type + leftoverLength + digits + hash (4-32)
-        short hashSize;
-        if (truncated) {
-            hashSize = 4;
-        } else {
-            hashSize = this.digest.getLength();
-        }
-        return this.isActive() ? (short) (nameLen + 5 + hashSize) : _0;
-    }
+	public short calculateSerializedResponseLength(boolean truncated) {
+		// magic + nameLength + name (var) + type + leftoverLength + digits + hash (4-32)
+		short hashSize;
+		if (truncated) {
+			hashSize = 4;
+		} else {
+			hashSize = this.digest.getLength();
+		}
+		return this.isActive() ? (short) (nameLen + 5 + hashSize) : _0;
+	}
 
-    public short calculateSerializedListEntryLength() {
-        // tag + len + type + name
-        return this.isActive() ? (short) (nameLen + 3) : _0;
-    }
+	public short calculateSerializedListEntryLength() {
+		// tag + len + type + name
+		return this.isActive() ? (short) (nameLen + 3) : _0;
+	}
 
 	public void setProp(byte props) {
 		this.props = props;
@@ -239,17 +239,17 @@ public class OathObj {
 				short carry = 0;
 				short ctr1 = (short) ((counter >>> 8) & 0x00ff);
 				short ctr2 = (short) (counter & 0x00ff);
-	        	for(byte j = 7; j > 0; j--) {
-	        		short place = (short) (scratchBuf[j] & 0x00ff);
-	        		if(j == 7) {
-	        			place += ctr2;
-	        		} else if(j == 6) {
-	        			place += ctr1;
-	        		}
-	        		place += carry;
-	        		carry = (byte) (place >>> 8);
-	        		scratchBuf[j] = (byte) (place);
-	        	}
+				for(byte j = 7; j > 0; j--) {
+					short place = (short) (scratchBuf[j] & 0x00ff);
+					if(j == 7) {
+						place += ctr2;
+					} else if(j == 6) {
+						place += ctr1;
+					}
+					place += carry;
+					carry = (byte) (place >>> 8);
+					scratchBuf[j] = (byte) (place);
+				}
 			}
 			counter++;
 			buf = scratchBuf;
