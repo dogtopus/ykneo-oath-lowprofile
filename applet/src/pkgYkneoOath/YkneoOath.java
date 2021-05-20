@@ -79,7 +79,7 @@ public class YkneoOath extends Applet {
 	private static final byte[] version = {0x01,0x00,0x02};
 
 	public YkneoOath() {
-			nobjects = 0;
+		nobjects = 0;
 		tempBuf = JCSystem.makeTransientByteArray((short) TMP_BUFSIZE, JCSystem.CLEAR_ON_DESELECT);
 		// header+footer+255. May need to adjust when we (maybe in the future) support extended length or after we gauge maximum needed buffer size
 		copyBuffer = JCSystem.makeTransientByteArray((short) 261, JCSystem.CLEAR_ON_DESELECT);
@@ -255,17 +255,17 @@ public class YkneoOath extends Applet {
 			}
 			break;
 		case SEND_REMAINING_INS: // send data remaining in send buffer
-				switch (this.getCurrentOp()) {
-				case LIST_INS:
-					sendLen = this.handleList(apdu.getBuffer(), true);
-					break;
-				case CALCULATE_ALL_INS:
-					sendLen = this.handleCalcAll(this.copyBuffer, this.getCurrentP2(), apdu.getBuffer(), true);
-					break;
-				default:
-					sendLen = 0;
-					break;
-				}
+			switch (this.getCurrentOp()) {
+			case LIST_INS:
+				sendLen = this.handleList(apdu.getBuffer(), true);
+				break;
+			case CALCULATE_ALL_INS:
+				sendLen = this.handleCalcAll(this.copyBuffer, this.getCurrentP2(), apdu.getBuffer(), true);
+				break;
+			default:
+				sendLen = 0;
+				break;
+			}
 			break;
 		default:
 			ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
@@ -356,7 +356,7 @@ public class YkneoOath extends Applet {
 			ISOException.throwIt(ISO7816.SW_WRONG_DATA);
 		}
 		offs += getLengthBytes(len);
-		short respLen =  authObj.calculate(input, offs, len, tempBuf, _0);
+		short respLen = authObj.calculate(input, offs, len, tempBuf, _0);
 		output[0] = RESPONSE_TAG;
 		output[1] = (byte) respLen;
 		Util.arrayCopyNonAtomic(tempBuf, _0, output, (short) 2, respLen);
@@ -439,7 +439,7 @@ public class YkneoOath extends Applet {
 	}
 
 	private short handleCalcAll(byte[] challenge, byte p2, byte[] output, boolean isContinue) {
-			short remaining = (short) output.length;
+		short remaining = (short) output.length;
 		short offs = 5;
 		boolean truncated = (p2 != 0x00);
 		if(challenge[offs++] != CHALLENGE_TAG) {
@@ -515,7 +515,7 @@ public class YkneoOath extends Applet {
 			return 0;
 		}
 		for(; object != null; object = object.nextObject) {
-				short length = object.calculateSerializedListEntryLength();
+			short length = object.calculateSerializedListEntryLength();
 			if(!object.isActive()) {
 				continue;
 			}

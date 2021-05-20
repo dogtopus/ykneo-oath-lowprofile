@@ -5,7 +5,7 @@ YubiKey NEO device that is sold by Yubico.  Its primary use is to use
 the YubiKey NEO to generate OATH HOTP/TOTP one-time-passwords.
 
 This fork mainly aims at cuting down the absurd transient memory usage
-of the original ykneo-auth so it will hopefully work on more hardware
+of the original ykneo-oath so it will hopefully work on more hardware
 other than Yubikey NEO.
 
 Tested working on FeiTian JavaCOS A22 and J3H145. Only TOTP works on ACOSJ Dual 95K for some reason.
