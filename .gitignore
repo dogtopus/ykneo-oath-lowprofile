@@ -31,3 +31,5 @@ test/lib/asm-debug-all.jar
 jacoco.exec
 jacoco.xml
 jacoco/
+
+ext/ant-javacard.jar
